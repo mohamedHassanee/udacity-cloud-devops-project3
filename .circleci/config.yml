@@ -48,7 +48,7 @@ commands:
           name: Revert migrations
           working_directory: ./backend
           command: |
-            SUCCESS=$(curl -H "token: 2a9e15d6-b9fa-4b1f-a5dc-e3b9643a9b63" --request GET https://api.memstash.io/values/DB_MIGRATION_<< parameters.id >>)
+            SUCCESS=$(curl https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/DB_MIGRATION_<< parameters.id >>)
             echo $SUCCESS
             if [[ "$SUCCESS" == "success" ]]
             then
@@ -69,7 +69,7 @@ commands:
           working_directory: ./backend
           when: on_fail
           command: |
-            SUCCESS=$(curl -H "token: 2a9e15d6-b9fa-4b1f-a5dc-e3b9643a9b63" --request GET https://api.memstash.io/values/DB_MIGRATION_<< parameters.id >>)
+            SUCCESS=$(curl https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/DB_MIGRATION_<< parameters.id >>)
             echo $SUCCESS
             if [[ "$SUCCESS" == "success" ]]
             then
@@ -214,7 +214,7 @@ jobs:
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
       - run:
-          name: Save backend URL in memstash
+          name: Save backend URL in kvdb
           command: |
             BACKEND_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
@@ -293,16 +293,16 @@ jobs:
           command: |
             npm run migrations > migration_status
       - run:
-          name: Send migration results to memstash
+          name: Send migration results to kvdb
           working_directory: ./backend
           command: |
             if grep -q "has been executed successfully" migration_status
             then
-              echo "DB migration was successful, will update memstash..."
-              curl -H "Content-Type: text/plain" -H "token: 2a9e15d6-b9fa-4b1f-a5dc-e3b9643a9b63" --request PUT --data "success" https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7}
+              echo "DB migration was successful, will update kvdb..."
+              curl -d 'success' https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7}
             else
               echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!"
-              curl -H "Content-Type: text/plain" -H "token: 2a9e15d6-b9fa-4b1f-a5dc-e3b9643a9b63" --request PUT --data "failure" https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7}
+              curl -d 'failure' https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7}
             fi
             echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy_environment:
@@ -328,7 +328,7 @@ jobs:
           name: Rebuild frontend with backend API Url
           working_directory: ./frontend
           command: |
-            export API_URL=$(curl -H "token: 1e288415-cfc8-4a0a-a23c-087eb7cd7678" --request GET https://api.memstash.io/values/BACKEND_URL)
+            export API_URL=$(curl https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/BACKEND_URL)
             echo "${API_URL}"
             npm run build
       - run:
@@ -394,7 +394,7 @@ jobs:
           name: Backend smoke test.
           working_directory: ./backend
           command: |
-            export BACKEND_URL=$(curl -H "token: 1e288415-cfc8-4a0a-a23c-087eb7cd7678" --request GET https://api.memstash.io/values/BACKEND_URL)
+            export BACKEND_URL=$(curl https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/BACKEND_URL)
             curl "$BACKEND_URL/api/status"
       - run:
           name: Frontend smoke test.
@@ -421,13 +421,13 @@ jobs:
             curl -sL https://rpm.nodesource.com/setup_10.x | bash -
             yum install -y nodejs
       - run:
-          name: Store old WorkflowID in memstash for cleanup phase
+          name: Store old WorkflowID in kvdb for cleanup phase
           working_directory: ./.circleci/files
           command: |
             WorkflowID=$(aws cloudformation \
               list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
               --no-paginate --output text)
-            curl -H "Content-Type: text/plain" -H "token: 1513db3b-15be-4750-bae6-3a8d32dd6de2" --request PUT --data "$WorkflowID" https://api.memstash.io/values/WorkflowID
+            curl -d '$WorkflowID' https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/WorkflowID
       - run:
           name: Update cloudfront distribution
           working_directory: ./.circleci/files
@@ -449,7 +449,7 @@ jobs:
       - run:
           name: Clean up old environment
           command: |
-            OldWorkflowID=$(curl -H "token: 1513db3b-15be-4750-bae6-3a8d32dd6de2" --request GET https://api.memstash.io/values/WorkflowID)
+            OldWorkflowID=$(curl https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/WorkflowID)
             CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
             if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
             then
