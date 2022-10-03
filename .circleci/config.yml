@@ -328,7 +328,7 @@ jobs:
           name: Rebuild frontend with backend API Url
           working_directory: ./frontend
           command: |
-            export API_URL=$(curl https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/BACKEND_URL)
+            export API_URL=$(curl -k https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/BACKEND_URL)
             echo "${API_URL}"
             npm run build
       - run:
