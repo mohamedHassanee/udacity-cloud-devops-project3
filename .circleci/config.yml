@@ -220,7 +220,8 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
-            curl -d 'http://$BACKEND_IP:3030' https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/BACKEND_URL
+            echo $BACKEND_IP 
+            curl -d "http://$BACKEND_IP:3030" https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/BACKEND_URL
       - run:
           name: Deploy frontend infrastructure
           working_directory: ./.circleci/files
