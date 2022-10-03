@@ -425,7 +425,7 @@ jobs:
           working_directory: ./.circleci/files
           command: |
             WorkflowID=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              list-exports --query "Exports[?Name==\`WorkflowProcessID\`].Value" \
               --no-paginate --output text)
             curl -d "$WorkflowID" https://kvdb.io/Pj3VK1ZJEyRwKpDFF1Fs6V/WorkflowID
       - run:
